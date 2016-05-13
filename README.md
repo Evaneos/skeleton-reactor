@@ -10,6 +10,9 @@
 * docker-compose log traefik
 * docker-compose log turbine
 
+
+![](Selection_048.png)
+
 Visit http://turbine.docker.localhost
 
 Play :)
