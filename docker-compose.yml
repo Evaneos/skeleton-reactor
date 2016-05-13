@@ -1,0 +1,39 @@
+application_data_volume:
+    image: 'busybox'
+    tty: true
+    restart: 'always'
+    container_name: 'application_data_volume'
+    volumes:
+      - './www/:/var/www/'
+
+php-cli:
+    build: 'php-cli/php70'
+    container_name: 'php-cli'
+    volumes:
+        - './shared/composer/:/root/.composer/'
+    volumes_from:
+        - application_data_volume
+    working_dir: /var/www
+
+turbine:
+    build: 'php-cli/php70'
+    volumes_from:
+        - application_data_volume
+    working_dir: /var/www
+    command: ./vendor/bin/ppm start --socket-path /tmp/ppm --max-requests 100
+    restart: always
+    expose:
+        - 1337
+    labels:
+      - "traefik.backend=turbine"
+      - "traefik.frontend.rule=Host:turbine.docker.localhost"
+
+traefik:
+  image: traefik
+  command: --web --docker --docker.domain=docker.localhost --logLevel=DEBUG
+  ports:
+    - "80:80"
+    - "8080:808"
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - /dev/null:/traefik.toml
