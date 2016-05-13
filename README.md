@@ -1,9 +1,9 @@
 #  Playground for reactor pattern with Silex skeleton and Traefik
 
 
-Avg response time : ~7ms
+**Service discovery via docker**
 
-* Service discovery via docker
+**Avg response time : ~7ms**
 
 * docker-compose up -d
 * docker-compose scale turbine=5
