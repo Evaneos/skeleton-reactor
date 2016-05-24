@@ -32,7 +32,9 @@
     "ramsey/uuid": "^3.4",
     "php-pm/php-pm": "dev-master",
     "php-pm/psr7-adapter": "dev-master",
-    "php-pm/httpkernel-adapter": "dev-master"
+    "php-pm/httpkernel-adapter": "dev-master",
+    "sroze/tolerance": "^0.3.0",
+    "guzzlehttp/guzzle": "^6.2"
   },
   "require-dev": {
     "behat/behat": "^3.0",

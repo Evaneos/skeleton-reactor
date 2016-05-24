@@ -4,7 +4,7 @@
     "port": 1337,
     "workers": 20,
     "app-env": "dev",
-    "debug": 0,
+    "debug": 1,
     "logging": 1,
     "static": true,
     "bootstrap": "Reactor\\Bootstrap\\Skeleton",
