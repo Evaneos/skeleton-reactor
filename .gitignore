@@ -1,10 +1,8 @@
 /www/vendor/
 /shared/composer/auth.json
 /shared/composer/cache/
-/www/app/config/parameters.yml
-/www/web/bundles/
-/www/var/cache/
-/www/var/logs/
 /shared/neo4j
-/www/var/sessions/
-/www/var/bootstrap.php.cache
+/www/cache
+/www/log
+!/www/cache/.gitkeep
+!/www/log/.gitkeep
