@@ -1,4 +1,0 @@
-default:
-  suites:
-    domain:
-      contexts: [ BaseContext ]

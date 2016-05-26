@@ -1,1 +1,0 @@
-TUNNEL_PATH=user@host
