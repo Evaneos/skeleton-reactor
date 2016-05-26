@@ -1,0 +1,3 @@
+[submodule "tolerance"]
+	path = tolerance
+	url = git@github.com:Tolerance/Viewer.git

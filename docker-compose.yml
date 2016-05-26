@@ -1,80 +1,160 @@
-application_data_volume:
-    image: 'busybox'
-    tty: true
-    restart: 'always'
-    container_name: 'application_data_volume'
-    volumes:
-      - './www/:/var/www/'
+version: '2'
 
-php-cli:
-    build: 'php-cli/php70'
-    container_name: 'php-cli'
-    volumes:
-        - './shared/composer/:/root/.composer/'
-    volumes_from:
-        - application_data_volume
-    working_dir: /var/www
-
-turbine:
-    build: 'php-cli/php70'
-    volumes_from:
-        - application_data_volume
-    working_dir: /var/www
-    command: ./vendor/bin/ppm start --socket-path /tmp/ppm --max-requests 100
-    restart: always
-    expose:
-        - 1337
-    labels:
-      - "traefik.backend=turbine"
-      - "traefik.frontend.rule=Host:turbine.docker.localhost"
-      - "traefik.frontend.passHostHeader=true"
-      - "traefik.weight=10"
-      - "Host:{containerName}.{domain}"
-
-neo4j:
-    image: neo4j:3.0
-    expose:
-        - 7474:7474
-    ports:
-        - 7687:7687
-    volumes:
-        - ./shared/neo4j/data:/data
-
-tolerance_viewer_api:
-    image: 'sroze/tolerance-viewer-api'
-    environment:
-        NEO4J_HOST: 'neo4j'
-        NEO4J_PORT: '7474'
-        NEO4J_USERNAME: 'neo4j'
-        NEO4J_PASSWORD: 'admin'
-    expose:
-        - 80
-    links:
-        - neo4j
-    labels:
-        - "traefik.backend=tolerance-api"
-        - "traefik.frontend.rule=Host:tolerance.api.docker.localhost"
-        - "Host:{containerName}.{domain}"
-
-tolerance_viewer_ui:
-    image: 'sroze/tolerance-viewer-ui'
-    environment:
-        UI_PORT: 80
-        API_ROOT: http://tolerance.api.docker.localhost
-    expose:
-      - 80
-    labels:
-        - "traefik.backend=tolerance"
-        - "traefik.frontend.rule=Host:tolerance.ui.docker.localhost"
-        - "Host:{containerName}.{domain}"
-
-traefik:
-    image: traefik
-    command: --web --docker --docker.domain=docker.localhost --logLevel=DEBUG
-    ports:
-        - "80:80"
-        - "8080:8080"
-    volumes:
+services:
+  picture_volume:
+      image: 'busybox'
+      tty: true
+      restart: 'always'
+      working_dir: /var/www/Picture
+      volumes:
+        - './services/Picture/:/var/www/Picture'
         - /var/run/docker.sock:/var/run/docker.sock
-        - /dev/null:/traefik.toml
 
+  email_volume:
+      image: 'busybox'
+      tty: true
+      restart: 'always'
+      working_dir: /var/www/Email
+      volumes:
+        - './services/Email/:/var/www/Email'
+        - /var/run/docker.sock:/var/run/docker.sock
+
+  storage_volume:
+      image: 'busybox'
+      tty: true
+      restart: 'always'
+      working_dir: /var/www/Storage
+      volumes:
+        - './services/Storage/:/var/www/Storage'
+        - /var/run/docker.sock:/var/run/docker.sock
+
+  php-cli:
+      build: 'php-cli/php70'
+      container_name: 'php-cli'
+      networks:
+          - services
+          - tolerance
+      volumes:
+          - './shared/composer/:/root/.composer/'
+      volumes_from:
+          - picture_volume
+          - email_volume
+          - storage_volume
+      working_dir: /var/www
+
+  email:
+      build: 'php-cli/php70'
+      volumes_from:
+          - email_volume
+      working_dir: /var/www/Email
+      command: ./vendor/bin/ppm start --socket-path /tmp/ppm --max-requests 100
+      restart: always
+      networks:
+          - services
+      expose:
+          - 1337
+      labels:
+        - "traefik.backend=email"
+        - "traefik.frontend.rule=Host:email.docker.localhost"
+        - "Host:{containerName}.{domain}"
+
+  picture:
+      build: 'php-cli/php70'
+      volumes_from:
+          - picture_volume
+      working_dir: /var/www/Picture
+      command: ./vendor/bin/ppm start --socket-path /tmp/ppm --max-requests 100
+      restart: always
+      networks:
+          - services
+      expose:
+          - 1337
+      labels:
+        - "traefik.backend=picture"
+        - "traefik.frontend.rule=Host:picture.docker.localhost"
+        - "Host:{containerName}.{domain}"
+
+  storage:
+      build: 'php-cli/php70'
+      volumes_from:
+          - storage_volume
+      working_dir: /var/www/Storage
+      command: ./vendor/bin/ppm start --socket-path /tmp/ppm --max-requests 100
+      restart: always
+      networks:
+          - services
+      expose:
+          - 1337
+      labels:
+        - "traefik.backend=storage"
+        - "traefik.frontend.rule=Host:storage.docker.localhost"
+        - "Host:{containerName}.{domain}"
+
+  neo4j:
+      image: neo4j:3.0
+      networks:
+          - tolerance
+      ports:
+          - 7474:7474
+      volumes:
+          - neo4j_volume:/data
+
+  tolerance_viewer_api:
+      build: tolerance/api
+      networks:
+          - tolerance
+          - services
+      depends_on:
+          - neo4j
+      environment:
+          NEO4J_HOST: 'neo4j'
+          NEO4J_PORT: '7474'
+          NEO4J_USERNAME: 'neo4j'
+          NEO4J_PASSWORD: 'admin'
+      expose:
+          - 80
+      depends_on:
+          - neo4j
+      labels:
+          - "traefik.backend=tolerance-api"
+          - "traefik.frontend.rule=Host:tolerance.api.docker.localhost"
+          - "Host:{containerName}.{domain}"
+      command: docker/run.sh
+
+  tolerance_viewer_ui:
+      build: tolerance/user-interface
+      networks:
+          - tolerance
+      environment:
+          UI_PORT: 80
+          API_ROOT: http://tolerance.api.docker.localhost
+      expose:
+        - 80
+      labels:
+          - "traefik.backend=tolerance-ui"
+          - "traefik.frontend.rule=Host:tolerance.ui.docker.localhost"
+          - "Host:{containerName}.{domain}"
+      command: docker/run.sh
+
+  proxy:
+      image: traefik
+      command: --web --docker --docker.domain=docker.localhost
+      networks:
+          - services
+          - tolerance
+      ports:
+          - "80:80"
+          - "8080:8080"
+      volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+          - /dev/null:/traefik.toml
+          - ./shared/ssl/:/ssl
+      labels:
+        - traefik.enable=false
+
+networks:
+  services:
+  tolerance:
+
+volumes:
+    neo4j_volume:

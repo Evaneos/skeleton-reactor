@@ -1,0 +1,1 @@
+<?php return unserialize('a:1:{i:0;O:41:"Hateoas\\Configuration\\Annotation\\Relation":5:{s:4:"name";s:4:"self";s:4:"href";s:9:"expr(\'/\')";s:8:"embedded";N;s:10:"attributes";a:0:{}s:9:"exclusion";N;}}');

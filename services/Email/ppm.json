@@ -1,0 +1,13 @@
+{
+    "bridge": "HttpKernel",
+    "host": "0.0.0.0",
+    "port": 1337,
+    "workers": 20,
+    "app-env": "dev",
+    "debug": 1,
+    "logging": 1,
+    "static": true,
+    "bootstrap": "Reactor\\Bootstrap\\Skeleton",
+    "concurrent-requests": true,
+    "cgi-path": "\/usr\/local\/bin\/php-cgi"
+}
